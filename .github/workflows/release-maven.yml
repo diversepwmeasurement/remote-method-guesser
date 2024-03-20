@@ -1,33 +1,29 @@
-name: publish maven
-
-on:
-  release:
-    types:
-      - created
-
 jobs:
   publish:
-
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: ${{ github.event.repository.name }}
-        uses: actions/checkout@v4
-
-      - name: Set up Maven Central Repository
-        uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-          gpg-passphrase: SIGN_KEY_PASS
-
-      - name: Publish package
-        run: mvn --batch-mode clean deploy -Ppublish
-        env:
-          SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+    - continue-on-error: true
+      name: ${{ github.event.repository.name }}
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Set up Maven Central Repository
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        gpg-passphrase: SIGN_KEY_PASS
+        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        java-version: '11'
+        server-id: ossrh
+        server-password: MAVEN_PASSWORD
+        server-username: MAVEN_USERNAME
+    - continue-on-error: true
+      env:
+        MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+        MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      name: Publish package
+      run: mvn --batch-mode clean deploy -Ppublish
+name: publish maven
+on:
+  repository_dispatch:
+    types: trigger-ga___release-maven.yml

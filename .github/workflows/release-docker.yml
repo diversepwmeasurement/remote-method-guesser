@@ -1,39 +1,35 @@
-name: publish docker
-
-on:
-  push:
-    tags: [ v* ]
-
 env:
-  REGISTRY: ghcr.io
   IMAGE_NAME: qtc-de/remote-method-guesser/rmg
-
+  REGISTRY: ghcr.io
 jobs:
   build-and-push-image:
-
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: ${{ github.event.repository.name }}
-        uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASS }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    - continue-on-error: true
+      name: ${{ github.event.repository.name }}
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        password: ${{ secrets.DOCKER_PASS }}
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.DOCKER_USER }}
+    - continue-on-error: true
+      id: meta
+      name: Extract metadata (tags, labels) for Docker
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+    - continue-on-error: true
+      name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        labels: ${{ steps.meta.outputs.labels }}
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+name: publish docker
+on:
+  repository_dispatch:
+    types: trigger-ga___release-docker.yml
